@@ -5,14 +5,14 @@ kivy.require('1.8.0') # replace with your current kivy version !
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.graphics.instructions import Instruction 
 from kivy.core.window import Window
 from kivy.graphics import Color, Rectangle, Ellipse
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
-from random import uniform
+from random import uniform, randint
 from kivy.clock import Clock
 import math
 
@@ -111,10 +111,31 @@ class CNeuralNet():
         return 1 / (1 + math.exp(-(activation)));
 
 class NeuronCell(Widget):
-    # neuroncell = ObjectProperty(0)
+    neuron = ObjectProperty(None)
+    value = NumericProperty(0)
+    layer = StringProperty('hidden')
+    # label = StringProperty(False)
     # def __init__(self):
     #   with self.canvas:
     #       Ellipse(pos=self.pos, size=self.size)
+    def load_widget(self, grid_x, grid_y):
+        (self.grid_x, self.grid_y) = (grid_x, grid_y)
+        (real_x, real_y) = (self.parent.grid_width*grid_x, self.parent.height - (self.parent.grid_height*grid_y))
+        # self.label = Label(center=self.parent.center, text="%s" %self.neuron)
+
+        with self.canvas:
+            Ellipse(pos=(real_x-5, real_y-5), size=(10, 10))
+
+        if self.layer == 'input':
+            self.label = Label(center=(real_x, real_y + 20), text="-")
+            self.add_widget(self.label)
+        elif self.layer == 'output':
+            self.label = Label(center=(real_x, real_y - 20), text="-")
+            self.add_widget(self.label)
+
+    def update(self, value=False):
+        if value and self.label:
+            self.label.text = value
     pass    
 
 class NeuralDisplay(Widget):
@@ -128,18 +149,54 @@ class NeuralDisplay(Widget):
 
     def linkDisplayToNetwork(self):
 
+        self.layers = []
         ## Link Inputs
-        for neuron in self.neural_network.vec_layers[0]:
-            print 1 
+        print "linking input layer"
+        tmp = []
+        row = 1
+        grid_x_arr = self.getLayerPositions(self.neural_network.num_inputs, self.num_columns)
+        grid_y = row
+
+        for i in range(self.neural_network.num_inputs):
+            grid_x = grid_x_arr[i]
+            neuron_wid = NeuronCell(layer='input')
+            self.add_widget(neuron_wid)
+            neuron_wid.load_widget(grid_x, grid_y)
+            tmp.append(neuron_wid)
+        self.layers.append(tmp)
 
         ## Link Hidden
-        for layer in self.neural_network.vec_layers[1:-1]
-            for neuron in layer:
-                print 2
+        print "linking hidden layer(s)"
+        for layer in self.neural_network.vec_layers[:-1]:
+            tmp = []
+            row += 1
+            grid_x_arr = self.getLayerPositions(self.neural_network.neurons_per_hidden_layer, self.num_columns)
+            grid_y = row
+            i=0
+            for neuron in layer.vec_neurons:
+                grid_x = grid_x_arr[i]
+                i+=1
+                neuron_wid = NeuronCell(neuron=neuron, layer='hidden')
+                self.add_widget(neuron_wid)
+                neuron_wid.load_widget(grid_x, grid_y)
+                tmp.append(neuron_wid)
+            self.layers.append(tmp)
 
         ## Link Outputs
-        for neuron in self.neural_network.vec_layers[-1]:
-            print 3
+        print "linking output layer"
+        tmp = []
+        row = self.num_rows
+        grid_x_arr = self.getLayerPositions(self.neural_network.num_outputs, self.num_columns)
+        grid_y = row
+        i=0
+        for neuron in self.neural_network.vec_layers[-1].vec_neurons:
+            grid_x = grid_x_arr[i]
+            i+=1
+            neuron_wid = NeuronCell(neuron=neuron, layer='output')
+            self.add_widget(neuron_wid)
+            neuron_wid.load_widget(grid_x, grid_y)
+            tmp.append(neuron_wid)
+        self.layers.append(tmp)
 
     def defineGridPositions(self):
         self.grid_height = self.height / (self.num_rows + 1)
@@ -169,12 +226,34 @@ class NeuralDisplay(Widget):
             start_x += 0.5
 
         return [ start_x + i for i in range(n) ]
+    def getLayerPositions(self, n, m):
+        if n > m:
+            return []
+
+        diff = m-n
+        start_x = 1 + (diff / 2)
+
+        if diff % 2:
+            start_x += 0.5
+
+        return [ start_x + i for i in range(n) ]
 
 
     def update(self, inputs=False):
-        inputs = [1,0]
+        # inputs = [1,0]
+        inputs = [ randint(0,1) for x in range(self.neural_network.num_inputs) ]
         outputs = self.neural_network.update(inputs)
-        self.draw(inputs, outputs)
+
+        i=0
+        for neuron_wid in self.layers[0]:
+            neuron_wid.update(str(inputs[i]))
+            i+=1
+        i=0
+        for neuron_wid in self.layers[-1]:
+            neuron_wid.update(str(outputs[i]))
+            i+=1
+
+        # self.draw(inputs, outputs)
         # with self.canvas:
         #     # Label(pos=self.center, text="%s" %self.num_columns)
         #     # Label(pos=self.center, text="%s" %inputs[0])
@@ -186,20 +265,22 @@ class NeuralDisplay(Widget):
 
 
     def draw(self, inputs=False, outputs=False):
-        with self.canvas:
+        print self.layers
+        # with self.canvas:
             # Label(pos=self.center, text="%s" %self.num_columns)
 
-            row_num = 0
-            for row in self.grid_positions:
-                row_num += 1
-                i = 0
-                for position in row:
-                    Ellipse(pos=(self.grid_width*position, self.height - (self.grid_height*row_num)), size=(10, 10))
-                    if row_num == 1:
-                        Label(pos=(self.grid_width*position, self.height - (self.grid_height*row_num)), text="%s" %('-' if not inputs else inputs[i]))
-                    elif row_num == self.num_rows:
-                        Label(pos=(self.grid_width*position, self.height - (self.grid_height*row_num)), text="%s" %('-' if not outputs else outputs[i]))
-                    i+=1
+            # Label(center=self.center, text="%s" %inputs)
+                # row_num = 0
+                # for row in self.grid_positions:
+                #     row_num += 1
+                #     i = 0
+                #     for position in row:
+                #         Ellipse(pos=(self.grid_width*position - 5, self.height - (self.grid_height*row_num) - 5), size=(10, 10))
+                #         if row_num == 1:
+                #             self.add_widget(Label(center=(self.grid_width*position, self.height - (self.grid_height*row_num) + 20), text="%s" %('-' if not inputs else inputs[i])))
+                #         elif row_num == self.num_rows:
+                #             self.add_widget(Label(center=(self.grid_width*position, self.height - (self.grid_height*row_num) - 20), text="%s" %('-' if not outputs else outputs[i])))
+                #         i+=1
 
             # i = 0
             # for position in self.grid_positions:
@@ -228,18 +309,20 @@ class NeuralDisplay(Widget):
         self.num_columns = max(self.neural_network.neurons_per_hidden_layer,
             self.neural_network.num_inputs,
             self.neural_network.num_outputs)
-        print self.num_columns
-        self.defineGridPositions()
-        #self.linkDisplayToNetwork()
+        # self.defineGridPositions()
+        self.grid_height = self.height / (self.num_rows + 1)
+        self.grid_width = self.width / (self.num_columns + 1)
+
+        self.linkDisplayToNetwork()
         self.draw()
     pass
 
 class NeuralNetApp(App):
     def build(self):
         network = NeuralDisplay(size=(Window.width, Window.height))
-        network.createNet(num_inputs=2, num_outputs=2, num_hidden_layers=2, neurons_per_hidden_layer=4)
+        network.createNet(num_inputs=64, num_outputs=1, num_hidden_layers=1, neurons_per_hidden_layer=24)
         # network.update([1,0])
-        Clock.schedule_interval(network.update, 3.0)
+        Clock.schedule_interval(network.update, 1.0)
         # network.draw()
         # return Label(text='Hello world')
         return network 
