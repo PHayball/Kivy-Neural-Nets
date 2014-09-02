@@ -252,25 +252,52 @@ class NeuralDisplay(Widget):
 class DigitalDisplay(Widget):
     node1 = ObjectProperty(0)
     node2 = ObjectProperty(0)
+    node3 = ObjectProperty(0)
+    node4 = ObjectProperty(0)
+    node5 = ObjectProperty(0)
+    node6 = ObjectProperty(0)
+    node7 = ObjectProperty(0)
+
+    def load_self(self):
+        self.nodes = [
+            self.node1,
+            self.node2,
+            self.node3,
+            self.node4,
+            self.node5,
+            self.node6,
+            self.node7,
+        ]
+
+    def switch_on(self, node):
+        # self.add_widget(Label(text=str([thing for thing in self])))
+        self.nodes[1].value = 1
+        # with self.canvas:
+        #     Color(0,0,1)
+    def update(self, rand):
+        self.switch_on(1)
     pass
 
 class DigitalDisplayNode(Widget):
+
     pass
 
 class Display(Widget):  
+        
     pass
 
 class NeuralNetApp(App):
     def build(self):
         display = Display()
-
-        digit = DigitalDisplay()
+        digit = DigitalDisplay(pos = (0, Window.height-200), size=(200,200))
+        digit.load_self()
         network = NeuralDisplay(size=(Window.width, Window.height-200))
         network.createNet(num_inputs=7, num_outputs=10, num_hidden_layers=2, neurons_per_hidden_layer=6)
         display.add_widget(digit)
         display.add_widget(network)
         # network.update([1,0])
         Clock.schedule_interval(network.update, 1.0)
+        Clock.schedule_interval(digit.update, 1.0)
         # network.draw()
         # return Label(text='Hello world')
         return display 
