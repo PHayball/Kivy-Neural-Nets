@@ -17,6 +17,7 @@ from kivy.clock import Clock
 import math
 
 
+binary_size = '0000000'
 DIGITS = ['1110111',
     '1000100',
     '0111110',
@@ -28,11 +29,6 @@ DIGITS = ['1110111',
     '1111111',
     '1111011']
 
-binary_size = '0000000'
-for i in range(128):
-    binary_i = bin(i)[2:]
-    padded_binary_i = binary_size[:-len(binary_i)] + binary_i
-    print padded_binary_i
 
 class SNeuron():
     def __init__(self, num_inputs):
@@ -223,7 +219,6 @@ class NeuralDisplay(Widget):
         return [ start_x + i for i in range(n) ]
 
     def update(self, inputs=False):
-        inputs = [ randint(0,1) for x in range(self.neural_network.num_inputs) ]
         outputs = self.neural_network.update(inputs)
 
         i=0
@@ -274,33 +269,51 @@ class DigitalDisplay(Widget):
         self.nodes[1].value = 1
         # with self.canvas:
         #     Color(0,0,1)
-    def update(self, rand):
-        self.switch_on(1)
+    def update(self, inputs):
+        if len(inputs) == len(self.nodes):
+            for i in range(len(inputs)):
+                self.nodes[i].value = inputs[i]
+
     pass
 
 class DigitalDisplayNode(Widget):
-
     pass
 
-class Display(Widget):  
-        
+class DisplayController(Widget):  
+    integer = NumericProperty(0)
+
+    def update(self, arg):
+    # for i in range(128):
+        binary_i = bin(self.integer)[2:]
+        padded_binary_i = binary_size[:-len(binary_i)] + binary_i
+        self.integer += 1
+
+        inputs = [ int(bool) for bool in padded_binary_i ]
+
+        # inputs = [ randint(0,1) for x in range(self.network.neural_network.num_inputs) ]
+        self.network.update(inputs)
+        self.digit.update(inputs)
+
+
     pass
 
 class NeuralNetApp(App):
     def build(self):
-        display = Display()
-        digit = DigitalDisplay(pos = (0, Window.height-200), size=(200,200))
-        digit.load_self()
-        network = NeuralDisplay(size=(Window.width, Window.height-200))
-        network.createNet(num_inputs=7, num_outputs=10, num_hidden_layers=2, neurons_per_hidden_layer=6)
-        display.add_widget(digit)
-        display.add_widget(network)
+        control = DisplayController()
+        control.digit = DigitalDisplay(pos = (0, Window.height-200), size=(200,200))
+        control.digit.load_self()
+        control.network = NeuralDisplay(size=(Window.width, Window.height-200))
+        control.network.createNet(num_inputs=7, num_outputs=10, num_hidden_layers=2, neurons_per_hidden_layer=6)
+
+        control.add_widget(control.digit)
+        control.add_widget(control.network)
         # network.update([1,0])
-        Clock.schedule_interval(network.update, 1.0)
-        Clock.schedule_interval(digit.update, 1.0)
+        # Clock.schedule_interval(control.network.update, 1.0)
+        # Clock.schedule_interval(control.digit.update, 1.0)
+        Clock.schedule_interval(control.update, 1.0)
         # network.draw()
         # return Label(text='Hello world')
-        return display 
+        return control 
 
 
 if __name__ == '__main__':
