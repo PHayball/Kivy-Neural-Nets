@@ -211,7 +211,7 @@ class CNeuralNet():
 
 if __name__ == '__main__':
     # myint = 
-    nn = CNeuralNet(7,9,2,16)
+    nn = CNeuralNet(7,10,2,16)
     print nn.vec_layers
 
     # binary_i = bin(expected)[2:]
@@ -228,17 +228,20 @@ if __name__ == '__main__':
 
 
 
-    for i in range(300):
-        for j in range(9):
+    for i in range(1000):
+        for j in range(10):
             inputs = DIGITS[j]
             # inputs = [1,0]
-            expected = [ 1 if j == k else 0 for k in range(9) ]
+            expected = [ 1 if j == k else 0 for k in range(10) ]
             inputs = [ int(bool) for bool in inputs ]
             outputs = nn.update(inputs)
             errors = nn.backpropErrors(outputs, expected)
             nn.adjustWeights(inputs, errors)
             # print "Epoch: %d, Expected %s, Errors %s, Output %s" %(i, expected, errors[-1], outputs)
-            print "Epoch: %d, Expected %s, Output %s" %(i, expected, [output for output in outputs])
+            if i % 50 == 0:
+                print "Epoch: %d, Expected %s, Output %s" %(i, expected, ["%.2f" %output for output in outputs])
+        if i % 50 == 0:
+            print "\n"
 
     # for i in range(100):
     #     outputs = nn.update(inputs)

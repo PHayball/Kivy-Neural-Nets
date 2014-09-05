@@ -1,6 +1,9 @@
 #:kivy 1.8.0
 
 <NeuronCell>:
+	canvas:
+		Color:
+			rgb: (self.r, self.g, self.b)
 
 <NeuralDisplay>:
 	
@@ -8,7 +11,7 @@
 	value: 0
 	canvas:
 		Color:
-			rgb: (0,1,0) if self.value else (1,0,0)
+			rgb: (1,0,0) if self.value else (0.2,0,0)
 		Rectangle:
 			pos: self.pos
 			size: self.size
