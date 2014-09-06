@@ -2,6 +2,8 @@
 import kivy
 kivy.require('1.8.0') # replace with your current kivy version !
 
+from kivy.config import Config
+Config.set('kivy', 'keyboard_mode', 'systemandmulti')
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
@@ -16,6 +18,7 @@ from random import uniform, randint
 from kivy.clock import Clock
 import math
 import time
+
 
 
 CONFIG = {
@@ -418,6 +421,13 @@ class DisplayController(Widget):
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
         self.look_at = 0
 
+    def on_touch_down(self, touch):
+
+        if self.look_at < 9:
+            self.look_at += 1
+        else:
+            self.look_at = 0
+
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
@@ -463,6 +473,7 @@ class DisplayController(Widget):
 
         self.network.epoch += 1
         digit = DIGITS[self.look_at]
+        # digit = DIGITS[4]
         inputs = [ int(bool) for bool in digit]
 
         # inputs = [ randint(0,1) for x in range(self.network.neural_network.num_inputs) ]
@@ -475,6 +486,14 @@ class DisplayController(Widget):
 
 
 class NeuralNetApp(App):
+
+    def on_pause(self):
+      # Here you can save data if needed
+        return True
+
+    def on_resume(self):
+      # Here you can check if any data needs replacing (usually nothing)
+        pass
     def build(self):
 
         neural_network = CNeuralNet(
@@ -494,7 +513,7 @@ class NeuralNetApp(App):
         control.add_widget(control.network)
 
 
-        Clock.schedule_interval(control.update, 0.01)
+        Clock.schedule_interval(control.update, 0.05)
             #     # print "Epoch: %d, Expected %s, Errors %s, Output %s" %(i, expected, errors[-1], outputs)
             # if i % 50 == 0:
             #     # control.update(0)
