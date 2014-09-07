@@ -514,33 +514,9 @@ class NeuralNetApp(App):
 
 
         Clock.schedule_interval(control.update, 0.05)
-            #     # print "Epoch: %d, Expected %s, Errors %s, Output %s" %(i, expected, errors[-1], outputs)
-            # if i % 50 == 0:
-            #     # control.update(0)
-                # Clock.schedule_once(control.update)
 
         return control 
 
 
 if __name__ == '__main__':
     NeuralNetApp().run()    
-
-
-    # def defineGridPositions(self):
-        
-    #     self.grid_height = self.height / (self.num_rows + 1)
-    #     self.grid_width = self.width / (self.num_columns + 1)
-    #     grid_positions = []
-
-    #     # Input Layer
-    #     grid_positions.append(self.getLayerPositions(self.neural_network.num_inputs, self.num_columns))
-
-    #     # Hidden Layers
-    #     for i in range(self.neural_network.num_hidden_layers):
-    #         grid_positions.append(self.getLayerPositions(self.neural_network.neurons_per_hidden_layer, self.num_columns))
-
-    #     # Output Layer
-    #     grid_positions.append(self.getLayerPositions(self.neural_network.num_outputs, self.num_columns))
-
-    #     self.grid_positions = grid_positions
-
