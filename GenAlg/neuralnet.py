@@ -33,7 +33,7 @@ CONFIG = {
 class SNeuron():
     def __init__(self, num_inputs):
         self.num_inputs = num_inputs
-        self.vec_weight = [ uniform(-1,1) for x in range(0,num_inputs+1) ]
+        self.vec_weights = [ uniform(-1,1) for x in range(0,num_inputs+1) ]
 
 class SNeuronLayer():
     def __init__(self, num_neurons, num_inputs_per_neuron):
@@ -65,7 +65,7 @@ class CNeuralNet():
         weights = []
         for layer in self.vec_layers:
             for neuron in layer.vec_neurons:
-                for weight in neuron.vec_weight:
+                for weight in neuron.vec_weights:
                     weights.append(weight)        
         return weights
 
@@ -107,10 +107,10 @@ class CNeuralNet():
                 # for (int k=0; k<NumInputs - 1; ++k)
                 for k in range(0, num_inputs):
                     # sum the weights x inputs
-                    netinput += self.vec_layers[i].vec_neurons[j].vec_weight[k] * inputs[c_weight]
+                    netinput += self.vec_layers[i].vec_neurons[j].vec_weights[k] * inputs[c_weight]
                     c_weight += 1
                 # add in the bias
-                netinput += self.vec_layers[i].vec_neurons[j].vec_weight[num_inputs-1] * -1
+                netinput += self.vec_layers[i].vec_neurons[j].vec_weights[num_inputs-1] * -1
                 # netinput += m_vecLayers[i].m_vecNeurons[j].m_vecWeight[NumInputs-1] * -1;
 
                 # we can store the outputs from each layer as we generate them.
@@ -148,10 +148,10 @@ class CNeuralNet():
                 # for (int k=0; k<NumInputs - 1; ++k)
                 for k in range(0, num_inputs):
                     # sum the weights x inputs
-                    netinput += self.vec_layers[i].vec_neurons[j].vec_weight[k] * inputs[c_weight]
+                    netinput += self.vec_layers[i].vec_neurons[j].vec_weights[k] * inputs[c_weight]
                     c_weight += 1
                 # add in the bias
-                netinput += self.vec_layers[i].vec_neurons[j].vec_weight[num_inputs-1] * -1
+                netinput += self.vec_layers[i].vec_neurons[j].vec_weights[num_inputs-1] * -1
                 # netinput += m_vecLayers[i].m_vecNeurons[j].m_vecWeight[NumInputs-1] * -1;
 
                 # we can store the outputs from each layer as we generate them.
@@ -162,8 +162,8 @@ class CNeuralNet():
             # print outputs
             N = 1
             for j in range(0, self.vec_layers[i].num_neurons):
-                for k in range(len(self.vec_layers[i].vec_neurons[j].vec_weight)):
-                    weight = self.vec_layers[i].vec_neurons[j].vec_weight[k]
+                for k in range(len(self.vec_layers[i].vec_neurons[j].vec_weights)):
+                    weight = self.vec_layers[i].vec_neurons[j].vec_weights[k]
                     # print "layer %s, neuron %s, weight %s" %(i,j,k)
                     # print "output %s, error %s, weight %s, input %s" %(outputs[j], errors[i][j], weight, (-1 if k == len(inputs) else inputs[k]))
                     # print "modify by %s" %(N * errors[i][j] * (-1 if k == len(inputs) else inputs[k]))
@@ -171,10 +171,10 @@ class CNeuralNet():
                     # print errors[i]
                     modification *= errors[i][j]
                     modification *= (-1 if k == len(inputs) else inputs[k])
-                    self.vec_layers[i].vec_neurons[j].vec_weight[k] = self.vec_layers[i].vec_neurons[j].vec_weight[k] + modification
+                    self.vec_layers[i].vec_neurons[j].vec_weights[k] = self.vec_layers[i].vec_neurons[j].vec_weights[k] + modification
                     # print (N*errors[i][k]*outputs[j])
-                # self.vec_layers[i].vec_neurons[j].vec_weight = [ weight + (N * errors[i][j] * outputs[j]) for\
-                #     weight in   self.vec_layers[i].vec_neurons[j].vec_weight ]
+                # self.vec_layers[i].vec_neurons[j].vec_weights = [ weight + (N * errors[i][j] * outputs[j]) for\
+                #     weight in   self.vec_layers[i].vec_neurons[j].vec_weights ]
         return outputs
 
     def backpropErrors(self, outputs, expected):
@@ -197,10 +197,10 @@ class CNeuralNet():
                 for neuron in current_layer.vec_neurons:
                     self.error = error_layers[-1][i]
                     i+=1
-                    # print zip(neuron.vec_weight, errors)
-                    # for weight, error in zip(neuron.vec_weight, errors):
+                    # print zip(neuron.vec_weights, errors)
+                    # for weight, error in zip(neuron.vec_weights, errors):
                     for j in range(len(errors)):
-                        errors[j] += neuron.vec_weight[j]*self.error
+                        errors[j] += neuron.vec_weights[j]*self.error
                 error_layers.append(errors)
         error_layers = error_layers[:-1]
         return error_layers[::-1]
@@ -217,6 +217,10 @@ class CNeuralNet():
 
         return netoutput
 
+class SGenome():
+    def __init__(self, vec_weights, fitness = 0.0):
+        self.vec_weights = vec_weights
+        self.fitness = fitness
 
 class CGenAlg():
 
@@ -224,9 +228,9 @@ class CGenAlg():
                     mutation_rate = 0.2, crossover_rate = 0.7):
         # this holds the entire population of chromosomes
         # vector <SGenome> m_vecPop (i.e list of genomes)
-        self.vec_pop = [ SGenome(vec_weight=[uniform(-1,1) for x in range(chromo_length)]) for n in range(pop_size) ]
+        self.vec_pop = [ SGenome([uniform(-1,1) for x in range(chromo_length)]) for n in range(pop_size) ]
         # for genome in self.vec_pop:
-        #     genome.vec_weight = [ uniform(-1,1) for x in range(chromo_length) ]
+        #     genome.vec_weights = [ uniform(-1,1) for x in range(chromo_length) ]
         # size of population
         self.pop_size = pop_size
         # amount of weights per chromo
@@ -238,7 +242,7 @@ class CGenAlg():
         self.average_fitness = 0 
         self.worst_fitness = 0
         # generation counter
-        sef.generation = 0
+        self.generation = 0
 
         # keeps track of the best genome
         self.fittest_genome = 0
@@ -303,14 +307,36 @@ class CGenAlg():
     # //-----------------------------------------------------------------------
     # vector<SGenome> Epoch(vector<SGenome> &old_pop);
     def epoch(self):
+        # //sort the population (for scaling and elitism)
+        self.vec_pop.sort(key=lambda genome: genome.vec_weights)
 
-        new_pop = [ None for i in range(self.pop_size)]
+        # //calculate best, worst, average and total fitness
+        self.calculateBestWorstAvTot();
+
+
         num_survivors = CONFIG['num_elite'] * CONFIG['num_copies_elite']
+        num_offspring = self.pop_size - num_survivors
+
         if num_survivors > self.pop_size:
             return False
 
+
+        # Offspring
+        offspring = []
+        for i in range(num_offspring / 2):
+            mum = self.getChromoRoulette()
+            dad = self.getChromoRoulette()
+
+            (baby1, baby2) = self.crossover(mum.vec_weights, dad.vec_weights)
+
+            offspring.append(SGenome(self.mutate(baby1)))
+            offspring.append(SGenome(self.mutate(baby2)))
+
+        new_pop = [ None for i in range(self.pop_size)]
         new_pop[:num_survivors] = GrabNBest(CONFIG['num_elite'], CONFIG['num_copies_elite'])
-        new_pop[num_survivors:] = [ SGenome(vec_weight = [ uniform(-1,1) for x in range(chromo_length) ]) for n in range(pop_size-num_survivors) ]
+        new_pop[num_survivors:] = offspring[:num_offspring]
+
+        self.reset();
 
 
     # //-------------------------GrabNBest----------------------------------
@@ -333,66 +359,69 @@ class CGenAlg():
     # //  calculates the fittest and weakest genome and the average/total 
     # //  fitness scores
     # //---------------------------------------------------------------------
-    # void CalculateBestWorstAvTot();
     def calculateBestWorstAvTot(self):
-        total_fitness = 0
-        highest_so_far = 0
-        lowest_so_far = 9999999
+        fitnesses = [ genome.fitness for genome in self.vec_pop ]
+        self.worst_fitness = fitnesses[0]
+        self.best_fitness = fitnesses[-1]
+        self.total_fitness = sum(fitnesses)
+        self.average_fitness = self.total_fitness / self.pop_size
 
-
-
-
-    void Reset();
-
-    CGenAlg(int    popsize,
-          double MutRat,
-          double CrossRat,
-          int    numweights);
+    # //-------------------------Reset()------------------------------
+    # //
+    # //  resets all the relevant variables ready for a new generation
+    # //--------------------------------------------------------------
+    def reset(self):
+        self.total_fitness = 0
+        self.best_fitness = 9999999
+        self.average_fitness = 0 
+        self.worst_fitness = 0
 
     # -------------------accessor methods
-    vector<SGenome> GetChromos()const{return m_vecPop;}
+    # vector<SGenome> GetChromos()const{return m_vecPop;}
 
-    double AverageFitness()const{return m_dTotalFitness / m_iPopSize;}
+    # double AverageFitness()const{return m_dTotalFitness / m_iPopSize;}
 
-    double BestFitness()const{return m_dBestFitness;}
+    # double BestFitness()const{return m_dBestFitness;}
 
 
 
 
 
 if __name__ == '__main__':
+    genalg = CGenAlg(2,17)
+    print genalg.vec_pop[0].fitness
     # myint = 
-    nn = CNeuralNet(7,10,2,16)
-    print nn.vec_layers
+    # nn = CNeuralNet(7,10,2,16)
+    # print nn.vec_layers
 
-    # binary_i = bin(expected)[2:]
-    # padded_binary_i = BINARY_SIZE[:-len(binary_i)] + binary_i
-    # expected += 1
+    # # binary_i = bin(expected)[2:]
+    # # padded_binary_i = BINARY_SIZE[:-len(binary_i)] + binary_i
+    # # expected += 1
 
-    inputs = DIGITS[1]
-    # inputs = [1,0]
-    expected = [1]
-    inputs = [ int(bool) for bool in inputs ]
+    # inputs = DIGITS[1]
+    # # inputs = [1,0]
+    # expected = [1]
+    # inputs = [ int(bool) for bool in inputs ]
 
-    # inputs = [ randint(0,1) for x in range(self.network.neural_network.num_inputs) ]
-    print inputs
+    # # inputs = [ randint(0,1) for x in range(self.network.neural_network.num_inputs) ]
+    # print inputs
 
 
 
-    for i in range(1000):
-        for j in range(10):
-            inputs = DIGITS[j]
-            # inputs = [1,0]
-            expected = [ 1 if j == k else 0 for k in range(10) ]
-            inputs = [ int(bool) for bool in inputs ]
-            outputs = nn.update(inputs)
-            errors = nn.backpropErrors(outputs, expected)
-            nn.adjustWeights(inputs, errors)
-            # print "Epoch: %d, Expected %s, Errors %s, Output %s" %(i, expected, errors[-1], outputs)
-            if i % 50 == 0:
-                print "Epoch: %d, Expected %s, Output %s" %(i, expected, ["%.2f" %output for output in outputs])
-        if i % 50 == 0:
-            print "\n"
+    # for i in range(1000):
+    #     for j in range(10):
+    #         inputs = DIGITS[j]
+    #         # inputs = [1,0]
+    #         expected = [ 1 if j == k else 0 for k in range(10) ]
+    #         inputs = [ int(bool) for bool in inputs ]
+    #         outputs = nn.update(inputs)
+    #         errors = nn.backpropErrors(outputs, expected)
+    #         nn.adjustWeights(inputs, errors)
+    #         # print "Epoch: %d, Expected %s, Errors %s, Output %s" %(i, expected, errors[-1], outputs)
+    #         if i % 50 == 0:
+    #             print "Epoch: %d, Expected %s, Output %s" %(i, expected, ["%.2f" %output for output in outputs])
+    #     if i % 50 == 0:
+    #         print "\n"
 
     # for i in range(100):
     #     outputs = nn.update(inputs)
@@ -415,6 +444,6 @@ if __name__ == '__main__':
     #     for neuron in vec_layer.vec_neurons:
     #         layer_neuron += 1
     #         print "neuron %d" %layer_neuron
-    #         print neuron.vec_weight
+    #         print neuron.vec_weights
 
     # print nn.update([1,1])
